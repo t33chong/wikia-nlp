@@ -1,0 +1,4 @@
+*.pyc
+search-tests/*
+*.swp
+sumtract/*

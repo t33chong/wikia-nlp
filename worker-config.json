@@ -1,0 +1,23 @@
+{
+    "common": {
+            "temp_output_path": "/tmp/workerfiles",
+            "solr_endpoint": "http://search-s11.prod.wikia.net:8983/solr/main/"
+            },
+    "wiki":  {
+            "services": ["Wam", "WikiPromoData", "WikiViews"]
+            },
+    "page":  {
+            "services": [ "All" ],
+            "serviceGroups": {
+                    "AllButDefault": ["BacklinkCount", "MediaData", "Metadata", "Redirects" ]
+                }
+            },
+    "logging": {
+                "host": "localhost",
+                "port": 27017
+                },
+    "scribe": {
+                "path": "/var/spool/scribe/",
+                "priority": {"events" : 1, "bulk" : 2, "retries" : 3 , "failures" : 4}
+                }
+}
