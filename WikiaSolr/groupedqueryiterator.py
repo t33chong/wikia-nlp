@@ -6,7 +6,10 @@ over wikis by WAM descending.
 """
 class GroupedQueryIterator(object):
     def __init__(self, config, options):
-        self.host = config["common"]["solr_endpoint"]
+        if type(config) == dict:
+            self.host = config["common"]["solr_endpoint"]
+        else:
+            self.host = config
         if not options.get('query', False):
             raise Exception("Query is required")
         self.query = options['query']
@@ -33,7 +36,7 @@ class GroupedQueryIterator(object):
                  'rows':self.rows,
                 'start':self.start,
                 'group':'true',
-               'fields':self.fields,
+               'fl':self.fields,
           'group.field':self.groupField,
           'group.limit':self.groupRows,
         'group.ngroups':'true',

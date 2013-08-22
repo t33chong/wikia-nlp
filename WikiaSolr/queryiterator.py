@@ -6,7 +6,10 @@ Part of the WikiaSolr module.
 class QueryIterator(object):
     """ Options is a dictionary -- use vals(options) on an optparse instance """
     def __init__(self, config, options):
-        self.host = config["common"]["solr_endpoint"]
+        if type(config) == dict:
+            self.host = config["common"]["solr_endpoint"]
+        else:
+            self.host = config
         if not options.get('query', False):
             raise Exception("Query is required")
         self.configure(config, options)
