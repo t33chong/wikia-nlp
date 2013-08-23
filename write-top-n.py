@@ -13,6 +13,8 @@ def write_files(wid):
         page_file.write(doc.get('html_en', '').lower().encode('utf-8'))
         page_file.close()
 
+#qi = QueryIterator('http://dev-search.prod.wikia.net:8983/solr/xwiki/select', {'query': 'lang_s:en', 'sort': 'id asc', 'fields': 'id'})
+
 def main():
     for line in open('top10'):
         write_files(int(line.strip()))
