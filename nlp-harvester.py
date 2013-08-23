@@ -8,6 +8,8 @@ import sys, json, gzip, tempfile, requests
 from corenlp.corenlp import *
 from WikiaSolr import QueryIterator, get_config, as_string
 
+DATA_DIR = '/Volumes/HDD/Users/tristan/Development/nlp-data' # /data
+
 wid = sys.argv[1]
 language = 'en' if len(sys.argv) < 3 else sys.argv[2]
 threads = 4 if len(sys.argv) < 4 else sys.argv[3]
@@ -16,10 +18,10 @@ last_indexed = False if len(sys.argv) < 5 else bool(sys.argv[4])
 
 def write_text(wid):
     try:
-        last_indexed_value = open('/data/last_indexed.txt').read().strip()
+        last_indexed_value = open(os.path.join(DATA_DIR, 'last_indexed.txt')).read().strip()
     except IOError:
         last_indexed_value = '2000-01-01T12:00:00.000Z'
-    text_dir = os.path.join('/data/text', str(wid))
+    text_dir = os.path.join(DATA_DIR, 'text', str(wid))
     query = 'wid:%s AND iscontent:true' % str(wid)
     if last_indexed:
         query += ' AND indexed:["%s" TO *]' % last_indexed_value
@@ -33,7 +35,7 @@ def write_text(wid):
             except NameError:
                 pass
             batch_count += 1
-            filelist_path = os.path.join('/data/filelist', str(wid))
+            filelist_path = os.path.join(DATA_DIR, 'filelist', str(wid))
             if not os.path.exists(filelist_path):
                 os.makedirs(filelist_path)
             filelist = open(os.path.join(filelist_path, 'batch%i' % batch_count), 'w')
@@ -50,7 +52,7 @@ def write_text(wid):
         text_file.close()
         filelist.write(text_filepath + '\n')
         doc_count += 1
-    with open('/data/last_indexed.txt', 'w') as last_indexed_file:
+    with open(os.path.join(DATA_DIR, 'last_indexed.txt'), 'w') as last_indexed_file:
         last_indexed_file.write(last_indexed_value)
 
 #TODO
