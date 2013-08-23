@@ -8,13 +8,13 @@ import sys, json, gzip, tempfile, requests
 from corenlp.corenlp import *
 from WikiaSolr import QueryIterator, get_config, as_string
 
-DATA_DIR = '/Volumes/HDD/Users/tristan/Development/nlp-data' # /data
+DATA_DIR = '/data' # /data
 
-wid = sys.argv[1]
+wid = int(sys.argv[1])
 language = 'en' if len(sys.argv) < 3 else sys.argv[2]
-threads = 4 if len(sys.argv) < 4 else sys.argv[3]
+threads = 4 if len(sys.argv) < 4 else int(sys.argv[3])
 #TODO: make last_indexed True as default
-last_indexed = False if len(sys.argv) < 5 else bool(sys.argv[4])
+last_indexed = False if len(sys.argv) < 5 else bool(int(sys.argv[4]))
 
 def write_text(wid):
     try:
