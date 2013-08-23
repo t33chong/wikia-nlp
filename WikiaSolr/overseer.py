@@ -1,3 +1,4 @@
+from WikiaSolr.queryiterator import QueryIterator
 from WikiaSolr.groupedqueryiterator import GroupedQueryIterator
 from wikicities.DB import LoadBalancer
 from subprocess import Popen
@@ -58,7 +59,42 @@ class Overseer(object):
                      print "Finished wid %s in %d seconds with return status %s" % (pkey, (datetime.now() - self.timings[pkey]).seconds, self.processes[pkey].returncode)
                  del self.processes[pkey], self.timings[pkey]
 
-    
+class NLPOverseer(Overseer):
+
+    def setOptions(self, options={}):
+        if not options.get('modulo'):
+            raise Exception('Must specify modulo 0 or 1.')
+        self.options = options
+        options['query'] = self.getQuery() # ensures the wiki is worth dealing with
+        options['fields'] = 'id'
+        options['sort'] = 'id asc'
+        options['verbose'] = True
+
+    def getIterator(self):
+        return QueryIterator('http://dev-search.prod.wikia.net:8983/solr/xwiki/', self.options)
+
+    def getQuery(self):
+        return 'lang_s:%s' % self.options.get('language', 'en')
+
+    def add_process(self, group):
+        wid = group["id"]
+        print "Starting process for wid %s" % wid
+        command = 'python %s %s %s %s %s' % (os.path.join(os.getcwd(), 'nlp-harvester.py'), str(wid), str(self.options['language']), str(self.options['threads']), str(self.options['last_indexed']))
+        process = Popen(command, shell=True)
+        self.processes[wid] = process
+        self.timings[wid] = datetime.now()
+
+    def oversee(self):
+        while True:
+            options = {}
+            iterator = self.getIterator()
+            for group in iterator:
+                if int(group['id']) % 2 == int(self.options['modulo']):
+                    while len(self.processes.keys()) == int(self.options['workers']):
+                        time.sleep(5)
+                        self.check_processes()
+                    self.add_process(group)
+
 """
 Oversees the administration of backlink processes
 """
@@ -66,7 +102,7 @@ class BacklinkOverseer(Overseer):
     """ Selects only wikis with outbound links """
     def getQuery(self):
         return 'outbound_links_txt:*'
-        
+
     """ Fires off a backlink harvester """
     def add_process(self, group):
         wid = group["groupValue"]
