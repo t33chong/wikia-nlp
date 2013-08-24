@@ -6,6 +6,7 @@ Number of threads is optionally provided as sys.argv[2]
 """
 import sys, shutil, json, gzip, tempfile, requests
 from corenlp.corenlp import *
+from corenlp.threadbatch import BatchParseThreader
 from WikiaSolr import QueryIterator, get_config, ParserOverseer
 
 DATA_DIR = '/data' # /data
@@ -79,7 +80,10 @@ def convert_xml_to_gzip(subdirectories):
 def main():
     text_dir = write_text(wid)
     filelist_dir, subdirectories = write_filelists(wid)
-    ParserOverseer(subdirectories, threads=2).oversee()
+    output_directory = os.path.join(DATA_DIR, 'xml', str(wid))
+    b = BatchParseThreader(CORENLP_PATH, MEMORY, PROPERTIES, output_directory)
+    b.parse(text_dir, num_threads=2)
+    #ParserOverseer(subdirectories, threads=2).oversee()
     #shutil.rmtree(text_dir)
     #shutil.rmtree(filelist_dir)
     #convert_xml_to_gzip(subdirectories)
