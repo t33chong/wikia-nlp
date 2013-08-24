@@ -1,5 +1,3 @@
-#TODO: copied directly from backlink-overseer.py - modify accordingly
-
 """
 Responsible for iterating over wikis and spawning processes.
 """
