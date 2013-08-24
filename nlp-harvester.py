@@ -39,10 +39,13 @@ def write_text(wid):
         text_subdir = os.path.join(text_dir, str(pageid)[0])
         if not os.path.exists(text_subdir):
             os.makedirs(text_subdir)
-        text_filepath = os.path.join(text_subdir, '%s.gz' % pageid)
-        text_file = gzip.GzipFile(text_filepath, 'w')
-        text_file.write(text)
-        text_file.close()
+        text_filepath = os.path.join(text_subdir, str(pageid))
+        with open(text_filepath, 'w') as text_file:
+            text_file.write(text)
+        #text_filepath = os.path.join(text_subdir, '%s.gz' % pageid)
+        #text_file = gzip.GzipFile(text_filepath, 'w')
+        #text_file.write(text)
+        #text_file.close()
     with open(os.path.join(DATA_DIR, 'last_indexed.txt'), 'w') as last_indexed_file:
         last_indexed_file.write(last_indexed_value)
     return text_dir
@@ -77,9 +80,9 @@ def main():
     text_dir = write_text(wid)
     filelist_dir, subdirectories = write_filelists(wid)
     ParserOverseer(subdirectories, threads=2).oversee()
-    shutil.rmtree(text_dir)
-    shutil.rmtree(filelist_dir)
-    convert_xml_to_gzip(subdirectories)
+    #shutil.rmtree(text_dir)
+    #shutil.rmtree(filelist_dir)
+    #convert_xml_to_gzip(subdirectories)
 
 if __name__ == '__main__':
     main()
