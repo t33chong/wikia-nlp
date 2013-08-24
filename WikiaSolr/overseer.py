@@ -112,13 +112,12 @@ class ParserOverseer(object):
         self.timings[index] = datetime.now()
 
     def oversee(self):
-        while True:
-            iterator = self.iterator
-            for group in iterator:
-                while len(self.processes.keys()) == int(self.threads):
-                    time.sleep(5)
-                    self.check_processes()
-                self.add_process(group)
+        iterator = self.iterator
+        for group in iterator:
+            while len(self.processes.keys()) == int(self.threads):
+                time.sleep(5)
+                self.check_processes()
+            self.add_process(group)
 
     def check_processes(self):
          for pkey in self.processes.keys():
