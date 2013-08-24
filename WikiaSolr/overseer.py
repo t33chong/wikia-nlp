@@ -107,6 +107,7 @@ class ParserOverseer(object):
         index = group['index']
         print 'parsing %s*...' % index
         command = '%s -filelist %s -outputDirectory %s' % (group['command'], group['filelist'], group['outputDirectory'])
+        print command # DEBUG
         if not os.path.exists(group['outputDirectory']):
             os.makedirs(group['outputDirectory'])
         process = Popen(command, shell=True)
