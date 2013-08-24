@@ -1,6 +1,7 @@
 from WikiaSolr.queryiterator import QueryIterator
 from WikiaSolr.groupedqueryiterator import GroupedQueryIterator
 from wikicities.DB import LoadBalancer
+from corenlp.corenlp import *
 from subprocess import Popen
 from datetime import datetime
 import json, requests, os, time
@@ -94,6 +95,36 @@ class NLPOverseer(Overseer):
                         time.sleep(5)
                         self.check_processes()
                     self.add_process(group)
+
+class ParserOverseer(object):
+    def __init__(self, subdirectories, threads=2):
+        self.iterator = subdirectories
+        self.threads = threads
+        self.processes = {}
+        self.timings = {}
+
+    def add_process(self, group):
+        index = group['index']
+        print 'parsing %s*...' % index
+        command = '%s -filelist %s -outputDirectory %s' % (group['command'], group['filelist'], group['outputDirectory'])
+        process = Popen(command, shell=True)
+        self.processes[index] = process
+        self.timings[index] = datetime.now()
+
+    def oversee(self):
+        while True:
+            iterator = self.iterator
+            for group in iterator:
+                while len(self.processes.keys()) == int(self.threads):
+                    time.sleep(5)
+                    self.check_processes()
+                self.add_process(group)
+
+    def check_processes(self):
+         for pkey in self.processes.keys():
+             if self.processes[pkey].poll() is not None:
+                 print "Finished index %s in %d seconds with return status %s" % (pkey, (datetime.now() - self.timings[pkey]).seconds, self.processes[pkey].returncode)
+                 del self.processes[pkey], self.timings[pkey]
 
 """
 Oversees the administration of backlink processes
