@@ -4,6 +4,7 @@ from collections import defaultdict
 from bs4 import BeautifulSoup
 from nltk.tokenize.punkt import PunktSentenceTokenizer
 from WikiaSolr import QueryIterator, get_config
+from normalize import not_infobox
 from time import time
 
 start_time = time()
@@ -24,10 +25,7 @@ for doc in qi:
     html = urllib2.urlopen(doc['url']).read()
     soup = BeautifulSoup(html)
     text = ' '.join([p.text for p in soup.find_all('p')])
-    #sentences = [sentence for sentence in p.tokenize(doc.get('html_en', ''))]
-    #sentences = [sentence for sentence in PunktSentenceTokenizer().tokenize(text)]
-    sentences = [remove_newlines(sentence) for sentence in PunktSentenceTokenizer().tokenize(text)]
-    #print sentences
+    sentences = filter(not_infobox, [remove_newlines(sentence) for sentence in PunktSentenceTokenizer().tokenize(text)])
     for (i, sentence) in enumerate(sentences):
         lowercase = sentence.lower()
         for entity in confirmed_entities:

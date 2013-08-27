@@ -12,3 +12,8 @@ def normalize(text):
             if bullet1 not in sentence and bullet2 not in sentence:
                 usable += '%s ' % sentence
     return usable.encode('utf-8')
+
+def not_infobox(text):
+    if bullet1 in text or bullet2 in text:
+        return False
+    return True
