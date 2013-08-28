@@ -79,12 +79,12 @@ def convert_xml_to_gzip(subdirectories):
 
 def main():
     text_dir = write_text(wid)
-    filelist_dir, subdirectories = write_filelists(wid)
+    #filelist_dir, subdirectories = write_filelists(wid)
     output_directory = os.path.join(DATA_DIR, 'xml', str(wid))
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
-    b = BatchParseThreader(CORENLP_PATH, MEMORY, PROPERTIES, output_directory)
-    b.parse(text_dir, num_threads=2)
+    b = BatchParseThreader(text_dir, CORENLP_PATH, MEMORY, PROPERTIES, output_directory)
+    b.parse(num_threads=2)
     #ParserOverseer(subdirectories, threads=2).oversee()
     #shutil.rmtree(text_dir)
     #shutil.rmtree(filelist_dir)
