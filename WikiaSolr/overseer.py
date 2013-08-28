@@ -63,12 +63,12 @@ class Overseer(object):
 class NLPOverseer(Overseer):
 
     def setOptions(self, options={}):
-        if not options.get('modulo'):
-            raise Exception('Must specify modulo 0 or 1.')
+        #if not options.get('modulo'):
+        #    raise Exception('Must specify modulo 0 or 1.')
         self.options = options
         options['query'] = self.getQuery() # ensures the wiki is worth dealing with
         options['fields'] = 'id'
-        options['sort'] = 'id asc'
+        options['sort'] = 'wam_i desc'
         options['verbose'] = True
 
     def getIterator(self):
@@ -90,11 +90,15 @@ class NLPOverseer(Overseer):
             options = {}
             iterator = self.getIterator()
             for group in iterator:
-                if int(group['id']) % 2 == int(self.options['modulo']):
-                    while len(self.processes.keys()) == int(self.options['workers']):
-                        time.sleep(5)
-                        self.check_processes()
-                    self.add_process(group)
+                #if int(group['id']) % 2 == int(self.options['modulo']):
+
+                # SKIP VIDEO WIKI
+                if int(group['id']) == 298117:
+                    continue
+                while len(self.processes.keys()) == int(self.options['workers']):
+                    time.sleep(5)
+                    self.check_processes()
+                self.add_process(group)
 
 class ParserOverseer(object):
     def __init__(self, subdirectories, threads=2):
