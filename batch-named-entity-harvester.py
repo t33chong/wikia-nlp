@@ -39,7 +39,7 @@ class EntityBatch(object):
 
     def get_tempdir(self):
         return self.tempdir
-        
+
     def write_batch_files(self):
         qi = QueryIterator(get_config(), {'query': 'wid:%s AND iscontent:true' % self.wid, 'fields':'id,url,html_en', 'sort': 'id asc'})
 
