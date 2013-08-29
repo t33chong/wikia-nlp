@@ -18,7 +18,7 @@ PROPERTIES = '/home/tristan/stanford-corenlp-python/corenlp/default.properties'
 
 wid = int(sys.argv[1])
 language = 'en' if len(sys.argv) < 3 else sys.argv[2]
-threads = 4 if len(sys.argv) < 4 else int(sys.argv[3])
+threads = 2 if len(sys.argv) < 4 else int(sys.argv[3])
 #TODO: make last_indexed True as default
 last_indexed = False if len(sys.argv) < 5 else bool(int(sys.argv[4]))
 
@@ -79,10 +79,9 @@ def convert_xml_to_gzip(subdirectories):
 
 def main():
     text_dir = write_text(wid)
+    #text_dir = '/data/text/831' # testing
     #filelist_dir, subdirectories = write_filelists(wid)
     output_directory = os.path.join(DATA_DIR, 'xml', str(wid))
-    if not os.path.exists(output_directory):
-        os.makedirs(output_directory)
     b = BatchParseThreader(text_dir, CORENLP_PATH, MEMORY, PROPERTIES, output_directory)
     b.parse(num_threads=2)
     #ParserOverseer(subdirectories, threads=2).oversee()
