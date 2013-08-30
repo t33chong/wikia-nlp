@@ -4,7 +4,7 @@ Responsible for parsing and writing files in XML format for all content pages on
 Wiki ID is provided as sys.argv[1]
 Number of threads is optionally provided as sys.argv[2]
 """
-import sys, shutil, json, gzip, tempfile, requests
+import sys, shutil, json, gzip, tempfile, requests, time
 from corenlp.corenlp import *
 from corenlp.threadbatch import BatchParseThreader
 from WikiaSolr import QueryIterator, get_config, ParserOverseer
@@ -78,6 +78,7 @@ def convert_xml_to_gzip(subdirectories):
             os.remove(xml_filepath)
 
 def main():
+    start_time = time.time()
     text_dir = write_text(wid)
     #text_dir = '/data/text/831' # testing
     #filelist_dir, subdirectories = write_filelists(wid)
@@ -88,6 +89,14 @@ def main():
     #shutil.rmtree(text_dir)
     #shutil.rmtree(filelist_dir)
     #convert_xml_to_gzip(subdirectories)
+    end_time = time.time()
+    total_time = end_time - start_time
+    time_dir = '/data/time'
+    if not os.path.exists(time_dir):
+        os.makedirs(time_dir)
+    time_file_name = os.path.join(time_dir, str(wid))
+    with open(time_file_name) as time_file:
+        time_file.write(total_time)
 
 if __name__ == '__main__':
     main()
