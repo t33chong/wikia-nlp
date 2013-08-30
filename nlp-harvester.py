@@ -95,8 +95,8 @@ def main():
     if not os.path.exists(time_dir):
         os.makedirs(time_dir)
     time_file_name = os.path.join(time_dir, str(wid))
-    with open(time_file_name) as time_file:
-        time_file.write(total_time)
+    with open(time_file_name, 'w') as time_file:
+        time_file.write(str(total_time))
 
 if __name__ == '__main__':
     main()
