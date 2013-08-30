@@ -68,7 +68,6 @@ class NLPOverseer(Overseer):
         self.options = options
         options['query'] = self.getQuery() # ensures the wiki is worth dealing with
         options['fields'] = 'id'
-        options['sort'] = 'wam_i desc'
         options['verbose'] = True
 
     def getIterator(self):
