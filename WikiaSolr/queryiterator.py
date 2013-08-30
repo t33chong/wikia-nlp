@@ -17,7 +17,7 @@ class QueryIterator(object):
 
     def configure(self, config, options):
         self.query = options.get('query')
-        self.start = options.get('start', 0 )
+        self.start = int(options.get('start', 0 ))
         self.firstStart = self.start
         self.rows = options.get('rows', 100)
         self.limit = options.get('limit', None)
