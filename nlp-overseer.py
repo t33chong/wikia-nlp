@@ -15,6 +15,8 @@ parser.add_option("-f", "--filter-query", dest="filterQuery", action="store", de
                   help="Filter queries can be used to slice and dice what we're iterating over")
 parser.add_option("-s", "--sort", dest="sort", action="store", default="wam_i desc",
                   help="Sorting groups lets us prioritize which wikis we act on first")
+parser.add_option("-r", "--start", dest="start", action="store", default=0,
+                  help="Index at which to start iterating over wikis")
 parser.add_option("-t", "--threads", dest="threads", action="store", default="2",
                   help="Number of map-reduce threads per worker")
 parser.add_option("-m", "--modulo", dest="modulo", action="store",
