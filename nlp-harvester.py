@@ -8,13 +8,14 @@ import sys, shutil, json, gzip, tempfile, requests, time
 from corenlp.corenlp import *
 from corenlp.threadbatch import BatchParseThreader
 from WikiaSolr import QueryIterator, get_config, ParserOverseer
+from normalize import clean_list
 
 DATA_DIR = '/data' # /data
 
 # CORENLP CONSTANTS
 CORENLP_PATH = '/home/tristan/stanford-corenlp-python/stanford-corenlp-full-2013-06-20'
 MEMORY = '3g'
-PROPERTIES = '/home/tristan/stanford-corenlp-python/corenlp/default.properties'
+PROPERTIES = '/home/tristan/stanford-corenlp-python/corenlp/performance.properties'
 
 wid = int(sys.argv[1])
 language = 'en' if len(sys.argv) < 3 else sys.argv[2]
@@ -34,7 +35,7 @@ def write_text(wid):
     qi = QueryIterator(get_config(), {'query': query, 'fields': 'pageid, html_en, indexed', 'sort': 'pageid asc'})
     for doc in qi:
         pageid = doc['pageid']
-        text = doc.get('html_%s' % language, '').encode('utf-8')
+        text = '\n'.join(clean_list(doc.get('html_%s' % language, '')))
         last_indexed_value = max(last_indexed_value, doc.get('indexed'))
         print 'writing text from %s_%s to file...' % (str(wid), str(pageid))
         text_subdir = os.path.join(text_dir, str(pageid)[0])
