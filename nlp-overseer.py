@@ -17,7 +17,7 @@ parser.add_option("-s", "--sort", dest="sort", action="store", default="wam_i de
                   help="Sorting groups lets us prioritize which wikis we act on first")
 parser.add_option("-r", "--start", dest="start", action="store", default=0,
                   help="Index at which to start iterating over wikis")
-parser.add_option("-t", "--threads", dest="threads", action="store", default="2",
+parser.add_option("-t", "--threads", dest="threads", action="store", default=2,
                   help="Number of map-reduce threads per worker")
 parser.add_option("-m", "--modulo", dest="modulo", action="store",
                   help="Remainder when wid is divided by 2; determines odd/even")
