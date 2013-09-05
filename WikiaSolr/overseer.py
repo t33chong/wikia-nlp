@@ -79,7 +79,7 @@ class NLPOverseer(Overseer):
     def add_process(self, group):
         wid = group["id"]
         print "Starting process for wid %s" % wid
-        command = 'python %s %s %s %s %s' % (os.path.join(os.getcwd(), 'nlp-harvester.py'), str(wid), str(self.options['language']), str(self.options['threads']), str(self.options['last_indexed']))
+        command = 'python %s %s %s %s' % (os.path.join(os.getcwd(), 'nlp-harvester.py'), str(wid), str(self.options['language']), str(self.options['last_indexed']))
         process = Popen(command, shell=True)
         self.processes[wid] = process
         self.timings[wid] = datetime.now()
@@ -88,11 +88,15 @@ class NLPOverseer(Overseer):
         while True:
             options = {}
             iterator = self.getIterator()
+            skip = [298117]
+            if os.path.exists('/data/xml'):
+                skip.extend(os.listdir('/data/xml'))
             for group in iterator:
                 #if int(group['id']) % 2 == int(self.options['modulo']):
 
-                # SKIP VIDEO WIKI
-                if int(group['id']) == 298117:
+                # SKIP VIDEO WIKI + "DONE"
+                if group['id'] in skip:
+                    print 'skipping %s...' % group['id']
                     continue
                 while len(self.processes.keys()) == int(self.options['workers']):
                     time.sleep(5)
