@@ -4,24 +4,25 @@ Responsible for parsing and writing files in XML format for all content pages on
 Wiki ID is provided as sys.argv[1]
 Number of threads is optionally provided as sys.argv[2]
 """
-import sys, shutil, json, gzip, tempfile, requests, time
+import sys, socket, shutil, json, gzip, tempfile, requests, time
 from corenlp.corenlp import *
 from corenlp.threadbatch import BatchParseThreader
 from WikiaSolr import QueryIterator, get_config, ParserOverseer
 from normalize import clean_list
 
 DATA_DIR = '/data' # /data
+config = json.loads(open('nlp-config.json').read())[socket.gethostname()]
 
 # CORENLP CONSTANTS
 CORENLP_PATH = '/home/tristan/stanford-corenlp-python/stanford-corenlp-full-2013-06-20'
-MEMORY = '3g'
+MEMORY = config['memory']
 PROPERTIES = '/home/tristan/stanford-corenlp-python/corenlp/performance.properties'
 
 wid = int(sys.argv[1])
 language = 'en' if len(sys.argv) < 3 else sys.argv[2]
-threads = 2 if len(sys.argv) < 4 else int(sys.argv[3])
 #TODO: make last_indexed True as default
-last_indexed = False if len(sys.argv) < 5 else bool(int(sys.argv[4]))
+last_indexed = False if len(sys.argv) < 4 else bool(int(sys.argv[3]))
+threads = config['threads']
 
 def write_text(wid):
     try:

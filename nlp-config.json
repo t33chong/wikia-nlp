@@ -1,0 +1,28 @@
+{
+    "nlp-s1":   {
+                    "workers":  4,
+                    "threads":  2,
+                    "memory":   "3072m"
+                },
+
+    "nlp-s3":   {
+                    "workers":  4,
+                    "threads":  2,
+                    "memory":   "1536m"
+                },
+    "dev-indexer-s1":   {
+                            "workers":  1,
+                            "threads":  2,
+                            "memory":   "3072m"
+                        },
+    "dev-indexer-s2":   {
+                            "workers":  4,
+                            "threads":  4,
+                            "memory":   "1434m"
+                        },
+    "dev-indexer-s3":   {
+                            "workers":  4,
+                            "threads":  3,
+                            "memory":   "820m"
+                        }
+}
