@@ -7,10 +7,10 @@ from optparse import OptionParser
 from WikiaSolr import NLPOverseer
 
 nlp_config = json.loads(open('nlp-config.json').read())[socket.gethostname()]
-threads = nlp_config['threads']
+workers = nlp_config['workers']
 
 parser = OptionParser()
-parser.add_option("-n", "--workers", dest="workers", action="store", default=4,
+parser.add_option("-n", "--workers", dest="workers", action="store", default=workers,
                   help="Specifies the number of open worker processes")
 parser.add_option("-w", "--wam-threshold", dest="wam_threshold", action="store", default=None,
                   help="If we have a threshold, we restart our wiki iteration when we hit it")
@@ -20,8 +20,6 @@ parser.add_option("-s", "--sort", dest="sort", action="store", default="wam_i de
                   help="Sorting groups lets us prioritize which wikis we act on first")
 parser.add_option("-r", "--start", dest="start", action="store", default=0,
                   help="Index at which to start iterating over wikis")
-parser.add_option("-t", "--threads", dest="threads", action="store", default=threads,
-                  help="Number of map-reduce threads per worker")
 parser.add_option("-m", "--modulo", dest="modulo", action="store",
                   help="Remainder when wid is divided by 2; determines odd/even")
 parser.add_option("-l", "--language", dest="language", action="store", default="en",
