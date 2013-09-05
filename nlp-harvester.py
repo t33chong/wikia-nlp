@@ -88,7 +88,7 @@ def main():
     b.parse(num_threads=threads)
     shutil.rmtree(text_dir)
     shutil.rmtree(filelist_dir)
-    convert_xml_to_gzip(subdirectories)
+    convert_xml_to_gzip(output_directory)
     end_time = time.time()
     total_time = end_time - start_time
     time_dir = '/data/time'
