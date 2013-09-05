@@ -69,27 +69,26 @@ def write_filelists(wid):
         subdirectories.append({'index': '%s_%s' % (str(wid), subdir_num), 'command': init_corenlp_command(CORENLP_PATH, MEMORY, PROPERTIES), 'filelist': filelist_file, 'outputDirectory': output_directory})
     return filelist_dir, subdirectories
 
-def convert_xml_to_gzip(subdirectories):
-    for subdir in subdirectories:
-        for xml_filename in os.listdir(subdir['outputDirectory']):
-            xml_filepath = os.path.join(subdir['outputDirectory'], xml_filename)
-            gzip_filepath = xml_filepath + '.gz'
+def convert_xml_to_gzip(xml_dir):
+    for subdir in os.listdir(xml_dir):
+        subdir_path = os.path.join(xml_dir, subdir)
+        for xml_file in os.listdir(subdir_path):
+            xml_path = os.path.join(subdir_path, xml_file)
+            gzip_filepath = xml_path + '.gz'
             gzip_file = gzip.GzipFile(gzip_filepath, 'w')
-            gzip_file.write(open(xml_filepath).read())
+            gzip_file.write(open(xml_path).read())
             gzip_file.close()
-            os.remove(xml_filepath)
+            os.remove(xml_path)
 
 def main():
     start_time = time.time()
     text_dir = write_text(wid)
-    #text_dir = '/data/text/831' # testing
-    #filelist_dir, subdirectories = write_filelists(wid)
     output_directory = os.path.join(DATA_DIR, 'xml', str(wid))
     b = BatchParseThreader(text_dir, CORENLP_PATH, MEMORY, PROPERTIES, output_directory)
     b.parse(num_threads=threads)
     shutil.rmtree(text_dir)
-    #shutil.rmtree(filelist_dir)
-    #convert_xml_to_gzip(subdirectories)
+    shutil.rmtree(filelist_dir)
+    convert_xml_to_gzip(subdirectories)
     end_time = time.time()
     total_time = end_time - start_time
     time_dir = '/data/time'
