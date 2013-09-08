@@ -5,8 +5,7 @@ Wiki ID is provided as sys.argv[1]
 Number of threads is optionally provided as sys.argv[2]
 """
 import sys, socket, shutil, json, gzip, tempfile, requests, time
-from corenlp.corenlp import *
-from corenlp.threadbatch import BatchParseThreader
+from parser import BatchParseThreader
 from WikiaSolr import QueryIterator, get_config, ParserOverseer
 from normalize import clean_list
 
@@ -14,7 +13,6 @@ DATA_DIR = '/data' # /data
 config = json.loads(open('nlp-config.json').read())[socket.gethostname()]
 
 # CORENLP CONSTANTS
-CORENLP_PATH = '/home/tristan/stanford-corenlp-python/stanford-corenlp-full-2013-06-20'
 MEMORY = config['memory']
 PROPERTIES = '/home/tristan/stanford-corenlp-python/corenlp/performance.properties'
 
@@ -53,21 +51,21 @@ def write_text(wid):
         last_indexed_file.write(last_indexed_value)
     return text_dir
 
-def write_filelists(wid):
-    subdirectories = []
-    text_dir = os.path.join(DATA_DIR, 'text', str(wid))
-    for subdir_num in os.listdir(text_dir):
-        text_subdir = os.path.join(text_dir, subdir_num)
-        files = [os.path.join(text_subdir, f) for f in os.listdir(text_subdir)]
-        filelist_dir = os.path.join(DATA_DIR, 'filelist', str(wid))
-        if not os.path.exists(filelist_dir):
-            os.makedirs(filelist_dir)
-        filelist_file = os.path.join(filelist_dir, str(subdir_num))
-        with open(filelist_file, 'w') as filelist:
-            filelist.write('\n'.join(files))
-        output_directory = os.path.join(DATA_DIR, 'xml', str(wid), subdir_num)
-        subdirectories.append({'index': '%s_%s' % (str(wid), subdir_num), 'command': init_corenlp_command(CORENLP_PATH, MEMORY, PROPERTIES), 'filelist': filelist_file, 'outputDirectory': output_directory})
-    return filelist_dir, subdirectories
+#def write_filelists(wid):
+#    subdirectories = []
+#    text_dir = os.path.join(DATA_DIR, 'text', str(wid))
+#    for subdir_num in os.listdir(text_dir):
+#        text_subdir = os.path.join(text_dir, subdir_num)
+#        files = [os.path.join(text_subdir, f) for f in os.listdir(text_subdir)]
+#        filelist_dir = os.path.join(DATA_DIR, 'filelist', str(wid))
+#        if not os.path.exists(filelist_dir):
+#            os.makedirs(filelist_dir)
+#        filelist_file = os.path.join(filelist_dir, str(subdir_num))
+#        with open(filelist_file, 'w') as filelist:
+#            filelist.write('\n'.join(files))
+#        output_directory = os.path.join(DATA_DIR, 'xml', str(wid), subdir_num)
+#        subdirectories.append({'index': '%s_%s' % (str(wid), subdir_num), 'command': init_corenlp_command(CORENLP_PATH, MEMORY, PROPERTIES), 'filelist': filelist_file, 'outputDirectory': output_directory})
+#    return filelist_dir, subdirectories
 
 def convert_xml_to_gzip(xml_dir):
     for subdir in os.listdir(xml_dir):
@@ -82,13 +80,15 @@ def convert_xml_to_gzip(xml_dir):
 
 def main():
     start_time = time.time()
+
     text_dir = write_text(wid)
-    output_directory = os.path.join(DATA_DIR, 'xml', str(wid))
-    b = BatchParseThreader(text_dir, CORENLP_PATH, MEMORY, PROPERTIES, output_directory)
-    b.parse(num_threads=threads)
+    xml_dir = BatchParser(text_dir, MEMORY, PROPERTIES, threads).parse()
+
+    # remove text dir and filelist dir
     shutil.rmtree(text_dir)
     shutil.rmtree(filelist_dir)
-    convert_xml_to_gzip(output_directory)
+    convert_xml_to_gzip(xml_dir)
+
     end_time = time.time()
     total_time = end_time - start_time
     time_dir = '/data/time'
