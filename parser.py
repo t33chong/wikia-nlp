@@ -41,7 +41,19 @@ class BatchParser(object):
         return dict(self.get_existing_xml_files(self.text_dir).items() +
                     self.get_existing_xml_files(self.staging_dir).items())
 
-    def write_filelists(self):
+    def write_filelists(self, retry):
+        """
+        If writing filelists for the original text directory, retry is False, and
+        filenames will be written to different filelists using a modulo equal to
+        the number of threads. Returns a list of filelist filepaths.
+
+        If writing filelists for a retry directory, retry is True, and filenames
+        will be written to a single filelist. Returns a list of length 1,
+        containing the filelist filepath.
+        """
+        modulo = self.threads
+        if retry:
+            modulo = 1
         preexisting = self.get_all_existing_xml_files()
         filelists = defaultdict(list)
         n = 0
@@ -49,26 +61,37 @@ class BatchParser(object):
             for filename in filenames:
                 if not preexisting.get(filename, False):
                     filepath = os.path.join(dirpath, filename)
-                    filelists[n % self.threads].append(filepath)
+                    filelists[n % modulo].append(filepath)
                     n += 1
         filelistpath = ensure_dir_exists('/data/filelist/' + self.wid)
         filelist_files = []
         for filelist in filelists:
             filelist_file = os.path.join(filelistpath, str(filelist))
+            if retry:
+                filelist_file  = os.path.join(filelistpath, str(max(os.listdir(filelistpath)) + 1))
             with open(filelist_file, 'w') as f:
                 f.write('\n'.join(filelists[filelist]))
             filelist_files.append(filelist_file)
         return filelist_files
 
-    def get_batch_command(self):
-        for filelist in self.write_filelists():
-            yield '%s -filelist %s -outputDirectory %s' % (init_corenlp_command(CORENLP_PATH, self.memory, self.properties), filelist, self.staging_dir)
+    def get_batch_command(self, retry):
+        corenlp_command = init_corenlp_command(CORENLP_PATH, self.memory, self.properties)
+        if retry:
+            filelist = self.write_filelists(True)[0]
+            retry_dir = ensure_dir_exists('/data/retry/' + self.wid + '/' + os.path.basename(filelist))
+            return '%s -filelist %s -outputDirectory %s' % (corenlp_command, filelist, retry_dir)
+        for (i, filelist) in enumerate(self.write_filelists(retry)):
+            yield '%s -filelist %s -outputDirectory %s' % (corenlp_command, filelist, os.path.join(self.staging_dir, str(i)))
 
-    def open_process(self, i):
-        command = self.get_batch_command()
+    def open_process(self, i, retry=False):
+        command = self.get_batch_command(retry)
         print '%i: "%s"' % (i, command)
         self.time[i] = time.time()
         self.processes[i] = Popen([command], shell=True, preexec_fn=os.setsid)
+
+    def check_for_incomplete_parse(self):
+        # TODO
+        pass
 
     def parse(self, threads=2):
         """
