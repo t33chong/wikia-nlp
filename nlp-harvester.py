@@ -5,7 +5,7 @@ Wiki ID is provided as sys.argv[1]
 Number of threads is optionally provided as sys.argv[2]
 """
 import sys, socket, shutil, json, gzip, tempfile, requests, time
-from parser import BatchParseThreader
+from parser import BatchParseThreader, ensure_dir_exists
 from WikiaSolr import QueryIterator, get_config, ParserOverseer
 from normalize import clean_list
 
@@ -84,16 +84,11 @@ def main():
     text_dir = write_text(wid)
     xml_dir = BatchParser(text_dir, MEMORY, PROPERTIES, threads).parse()
 
-    # remove text dir and filelist dir
-    shutil.rmtree(text_dir)
-    shutil.rmtree(filelist_dir)
     convert_xml_to_gzip(xml_dir)
 
-    end_time = time.time()
-    total_time = end_time - start_time
-    time_dir = '/data/time'
-    if not os.path.exists(time_dir):
-        os.makedirs(time_dir)
+    total_time = time.time() - start_time
+
+    time_dir = ensure_dir_exists('/data/time')
     time_file_name = os.path.join(time_dir, str(wid))
     with open(time_file_name, 'w') as time_file:
         time_file.write(str(total_time))
