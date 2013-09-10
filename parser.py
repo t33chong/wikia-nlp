@@ -1,4 +1,5 @@
 import os
+import shutil
 import re
 import time
 from subprocess import Popen
@@ -60,7 +61,7 @@ class BatchParser(object):
     def _write_initial_filelists(self):
         """
         Called by constructor. Write filelists for all files in the text_dir
-        (split by modulo = # of threads), and store their locations in dict 
+        (split by modulo = # of threads), and store their locations in dict
         self.filelist_index, with process ID int i as key.
         """
         modulo = self.threads
@@ -86,7 +87,8 @@ class BatchParser(object):
         appropriate command to call the Java parser on batch i.
         """
         corenlp_command = init_corenlp_command(CORENLP_PATH, self.memory, self.properties)
-        return '%s -filelist %s -outputDirectory %s' % (corenlp_command, self.filelist_index[i], os.path.join(self.staging_dir, str(i)))
+        output_directory = ensure_dir_exists(os.path.join(self.staging_dir, str(i)))
+        return '%s -filelist %s -outputDirectory %s' % (corenlp_command, self.filelist_index[i], output_directory)
 
     def open_process(self, i):
         """
@@ -107,7 +109,7 @@ class BatchParser(object):
         files, and returns an integer corresponding to the new filelist_index.
         If parse is complete, returns False.
         """
-        complete = self.get_existing_xml_files(os.path.join(self.staging, str(i)))
+        complete = self.get_existing_xml_files(os.path.join(self.staging_dir, str(i)))
         incomplete = []
         for line in open(self.filelist_index[i]):
             pageid = os.path.basename(line.strip())
@@ -115,12 +117,12 @@ class BatchParser(object):
                 incomplete.append(line.strip())
         if incomplete:
             j = max(self.filelist_index.keys()) + 1
-            retrypath = ensure_dir_exists(os.path.join(self.retry_dir, str(j)))
-            for filepath in incomplete:
-                shutil.move(filepath, retrypath)
             retry_files = []
-            for filename in os.listdir(retrypath):
-                retry_files.append(os.path.join(retrypath, filename))
+            retry_path = ensure_dir_exists(os.path.join(self.retry_dir, str(j)))
+            for src_path in incomplete:
+                dest_path = os.path.join(retry_path, os.path.basename(src_path))
+                retry_files.append(dest_path)
+                shutil.move(src_path, dest_path)
             filelist = os.path.join(self.filelistpath, str(j))
             with open(filelist, 'w') as f:
                 f.write('\n'.join(retry_files))
@@ -136,14 +138,21 @@ class BatchParser(object):
         # text_dir and filelistpath removal temporarily disabled for debugging
         #shutil.rmtree(self.text_dir)
         #shutil.rmtree(self.filelistpath)
-        shutil.move(self.staging_dir, self.xml_dir)
+        for (dirpath, dirnames, filenames) in os.walk(self.staging_dir):
+            for filename in filenames:
+                src_path = os.path.join(dirpath, filename)
+                first_digit = filename[0]
+                first_digit_dir = ensure_dir_exists(os.path.join(self.xml_dir, first_digit))
+                dest_path = os.path.join(first_digit_dir, filename)
+                shutil.move(src_path, dest_path)
+        shutil.rmtree(self.staging_dir)
 
-    def parse(self, threads=2):
+    def parse(self):
         """
         Manages subprocesses responsible for parsing subdirectories of text
         param threads: number of concurrent threads, default 2
         """
-        for i in range(num_threads):
+        for i in range(self.threads):
             self.open_process(i)
         while True:
             if len(self.processes) == 0:
@@ -151,10 +160,14 @@ class BatchParser(object):
             # sleep to avoid looping incessantly
             time.sleep(5)
             for i in self.processes.keys():
+                # TODO: change 'is not' to '!='
                 if self.processes[i].poll() is not None:
+                    print '==================== wid %s i %i IS NOT NONE ====================' % (self.wid, i)
                     del self.processes[i]
-                    j = is_parse_incomplete(i)
+                    j = self.is_parse_incomplete(i)
+                    print '==================== wid %s j = %s ====================' % (self.wid, str(j))
                     if j:
+                        print '==================== wid %s OPENING RETRY PROCESS ====================' % self.wid
                         self.open_process(j)
 
         self.clean_up()

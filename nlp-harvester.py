@@ -2,10 +2,11 @@
 Responsible for parsing and writing files in XML format for all content pages on a per-wiki basis.
 
 Wiki ID is provided as sys.argv[1]
-Number of threads is optionally provided as sys.argv[2]
+Language is optionally provided as sys.argv[2]
+Last indexed condition is optionally provided as sys.argv[3]
 """
-import sys, socket, shutil, json, gzip, tempfile, requests, time
-from parser import BatchParseThreader, ensure_dir_exists
+import os, sys, socket, shutil, json, gzip, tempfile, requests, time
+from parser import BatchParser, ensure_dir_exists
 from WikiaSolr import QueryIterator, get_config, ParserOverseer
 from normalize import clean_list
 
@@ -43,40 +44,21 @@ def write_text(wid):
         text_filepath = os.path.join(text_subdir, str(pageid))
         with open(text_filepath, 'w') as text_file:
             text_file.write(text)
-        #text_filepath = os.path.join(text_subdir, '%s.gz' % pageid)
-        #text_file = gzip.GzipFile(text_filepath, 'w')
-        #text_file.write(text)
-        #text_file.close()
     with open(os.path.join(DATA_DIR, 'last_indexed.txt'), 'w') as last_indexed_file:
         last_indexed_file.write(last_indexed_value)
     return text_dir
-
-#def write_filelists(wid):
-#    subdirectories = []
-#    text_dir = os.path.join(DATA_DIR, 'text', str(wid))
-#    for subdir_num in os.listdir(text_dir):
-#        text_subdir = os.path.join(text_dir, subdir_num)
-#        files = [os.path.join(text_subdir, f) for f in os.listdir(text_subdir)]
-#        filelist_dir = os.path.join(DATA_DIR, 'filelist', str(wid))
-#        if not os.path.exists(filelist_dir):
-#            os.makedirs(filelist_dir)
-#        filelist_file = os.path.join(filelist_dir, str(subdir_num))
-#        with open(filelist_file, 'w') as filelist:
-#            filelist.write('\n'.join(files))
-#        output_directory = os.path.join(DATA_DIR, 'xml', str(wid), subdir_num)
-#        subdirectories.append({'index': '%s_%s' % (str(wid), subdir_num), 'command': init_corenlp_command(CORENLP_PATH, MEMORY, PROPERTIES), 'filelist': filelist_file, 'outputDirectory': output_directory})
-#    return filelist_dir, subdirectories
 
 def convert_xml_to_gzip(xml_dir):
     for subdir in os.listdir(xml_dir):
         subdir_path = os.path.join(xml_dir, subdir)
         for xml_file in os.listdir(subdir_path):
-            xml_path = os.path.join(subdir_path, xml_file)
-            gzip_filepath = xml_path + '.gz'
-            gzip_file = gzip.GzipFile(gzip_filepath, 'w')
-            gzip_file.write(open(xml_path).read())
-            gzip_file.close()
-            os.remove(xml_path)
+            if xml_file.endswith('.xml'):
+                xml_path = os.path.join(subdir_path, xml_file)
+                gzip_filepath = xml_path + '.gz'
+                gzip_file = gzip.GzipFile(gzip_filepath, 'w')
+                gzip_file.write(open(xml_path).read())
+                gzip_file.close()
+                os.remove(xml_path)
 
 def main():
     start_time = time.time()
