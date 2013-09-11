@@ -190,7 +190,6 @@ class BatchParser(object):
             time.sleep(5)
             for i in self.processes.keys():
                 if self.processes[i].poll() is not None:
-                    print 'WID %s: Process %i complete.' % (self.wid, i)
                     del self.processes[i]
                     incomplete = self.is_parse_incomplete(i)
                     if incomplete:
@@ -203,6 +202,7 @@ class BatchParser(object):
                         j = self.write_retry_filelist(incomplete)
                         self.retries.append(j)
                         self.open_process(j)
+                    print 'WID %s: Process %i completed successfully.' % (self.wid, i)
 
         self.clean_up()
 
