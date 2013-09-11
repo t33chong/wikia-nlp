@@ -69,12 +69,19 @@ class BatchParser(object):
         preexisting = self.get_all_existing_xml_files()
         filelists = defaultdict(list)
         n = 0
+        text_file_count = 0
         for (dirpath, dirnames, filenames) in os.walk(self.text_dir):
             for filename in filenames:
+                text_file_count += 1
                 if not preexisting.get(filename, False):
                     filepath = os.path.join(dirpath, filename)
                     filelists[n % modulo].append(filepath)
                     n += 1
+        # if parser has previously run to completion on this wiki, exit
+        if len(preexisting) >= text_file_count:
+            print 'WIKI %s HAS ALREADY BEEN PARSED'
+            shutil.rmtree(self.text_dir)
+            sys.exit(0)
         for i in filelists:
             filelist = os.path.join(self.filelistpath, str(i))
             with open(filelist, 'w') as f:
