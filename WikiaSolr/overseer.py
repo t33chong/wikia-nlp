@@ -99,7 +99,7 @@ class NLPOverseer(Overseer):
                     print 'skipping %s...' % group['id']
                     continue
                 while len(self.processes.keys()) == int(self.options['workers']):
-                    time.sleep(5)
+                    time.sleep(1)
                     self.check_processes()
                 self.add_process(group)
 
