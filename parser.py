@@ -34,8 +34,10 @@ class BatchParser(object):
         self.retry_dir = ensure_dir_exists('/data/retry/' + self.wid)
         self.processes = {}
         self.time = {}
+        self.retries = []
         self.filelist_index = {}
         self.filelistpath = ensure_dir_exists('/data/filelist/' + self.wid)
+        self.failure_dir = ensure_dir_exists('/data/failure/' + self.wid)
         self._write_initial_filelists()
 
     def get_existing_xml_files(self, directory):
@@ -112,10 +114,8 @@ class BatchParser(object):
     def is_parse_incomplete(self, i):
         """
         Check whether all text files in filelist i have corresponding XML files as
-        a result of a successful parse.
-        If parse is incomplete, method writes a new filelist for remaining text
-        files, and returns an integer corresponding to the new filelist_index.
-        If parse is complete, returns False.
+        a result of a successful parse, and return a list of any remaining text
+        files.
         """
         complete = self.get_existing_xml_files(os.path.join(self.staging_dir, str(i)))
         incomplete = []
@@ -123,20 +123,37 @@ class BatchParser(object):
             pageid = os.path.basename(line.strip())
             if not complete.get(pageid, False):
                 incomplete.append(line.strip())
-        if incomplete:
-            j = max(self.filelist_index.keys()) + 1
-            retry_files = []
-            retry_path = ensure_dir_exists(os.path.join(self.retry_dir, str(j)))
-            for src_path in incomplete:
-                dest_path = os.path.join(retry_path, os.path.basename(src_path))
-                retry_files.append(dest_path)
-                shutil.move(src_path, dest_path)
-            filelist = os.path.join(self.filelistpath, str(j))
-            with open(filelist, 'w') as f:
-                f.write('\n'.join(retry_files))
-            self.filelist_index[j] = filelist
-            return j
-        return False
+        return incomplete
+
+    def write_retry_filelist(self, incomplete):
+        """
+        Takes list of remaining text files as input, writes a new filelist for
+        these files, returns an integer corresponding to the new filelist_index.
+        """
+        j = max(self.filelist_index.keys()) + 1
+        retry_files = []
+        retry_path = ensure_dir_exists(os.path.join(self.retry_dir, str(j)))
+        for src_path in incomplete:
+            dest_path = os.path.join(retry_path, os.path.basename(src_path))
+            retry_files.append(dest_path)
+            shutil.move(src_path, dest_path)
+        filelist = os.path.join(self.filelistpath, str(j))
+        with open(filelist, 'w') as f:
+            f.write('\n'.join(retry_files))
+        self.filelist_index[j] = filelist
+        return j
+
+    def move_to_failure(self, incomplete):
+        """
+        Takes list of remaining text files as input, and moves each of these files
+        to failure_dir.
+        """
+        for src_path in incomplete:
+            filename = os.path.basename(src_path)
+            first_digit = filename[0]
+            first_digit_dir = ensure_dir_exists(os.path.join(self.failure_dir, first_digit))
+            dest_path = os.path.join(first_digit_dir, filename)
+            shutil.move(src_path, dest_path)
 
     def clean_up(self):
         """
@@ -173,11 +190,18 @@ class BatchParser(object):
             time.sleep(5)
             for i in self.processes.keys():
                 if self.processes[i].poll() is not None:
-                    print 'WID %s: Process %i completed successfully.' % (self.wid, i)
+                    print 'WID %s: Process %i complete.' % (self.wid, i)
                     del self.processes[i]
-                    j = self.is_parse_incomplete(i)
-                    if j:
+                    incomplete = self.is_parse_incomplete(i)
+                    if incomplete:
+                        # only allow one retry per sub-batch
+                        if i in self.retries:
+                            print '*** WID %s: Moving process %i to failures.' % (self.wid, i)
+                            self.move_to_failure(incomplete)
+                            continue
                         print '*** WID %s: Opening retry process for %i as %i...' % (self.wid, i, j)
+                        j = self.write_retry_filelist(incomplete)
+                        self.retries.append(j)
                         self.open_process(j)
 
         self.clean_up()
