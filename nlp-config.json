@@ -7,8 +7,8 @@
 
     "nlp-s3":   {
                     "workers":  4,
-                    "threads":  2,
-                    "memory":   "1536m"
+                    "threads":  1,
+                    "memory":   "3072m"
                 },
     "dev-indexer-s1":   {
                             "workers":  1,
@@ -17,12 +17,12 @@
                         },
     "dev-indexer-s2":   {
                             "workers":  4,
-                            "threads":  4,
-                            "memory":   "1434m"
+                            "threads":  2,
+                            "memory":   "2868m"
                         },
     "dev-indexer-s3":   {
                             "workers":  4,
-                            "threads":  3,
-                            "memory":   "820m"
+                            "threads":  1,
+                            "memory":   "2460m"
                         }
 }
