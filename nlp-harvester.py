@@ -33,11 +33,11 @@ def write_text(wid):
     if last_indexed:
         query += ' AND indexed:["%s" TO *]' % last_indexed_value
     qi = QueryIterator(get_config(), {'query': query, 'fields': 'pageid, html_en, indexed', 'sort': 'pageid asc'})
+    print 'Writing text from %s to file...' % str(wid)
     for doc in qi:
         pageid = doc['pageid']
         text = '\n'.join(clean_list(doc.get('html_%s' % language, '')))
         last_indexed_value = max(last_indexed_value, doc.get('indexed'))
-        print 'writing text from %s_%s to file...' % (str(wid), str(pageid))
         text_subdir = os.path.join(text_dir, str(pageid)[0])
         if not os.path.exists(text_subdir):
             os.makedirs(text_subdir)

@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 import re
 import time
@@ -79,7 +80,7 @@ class BatchParser(object):
                     n += 1
         # if parser has previously run to completion on this wiki, exit
         if len(preexisting) >= text_file_count:
-            print 'WIKI %s HAS ALREADY BEEN PARSED'
+            print 'WIKI %s HAS ALREADY BEEN PARSED' % self.wid
             shutil.rmtree(self.text_dir)
             sys.exit(0)
         for i in filelists:
@@ -142,9 +143,8 @@ class BatchParser(object):
         Deletes text_dir and filelistpath. Moves all XML files from staging_dir
         to xml_dir.
         """
-        # text_dir and filelistpath removal temporarily disabled for debugging
-        #shutil.rmtree(self.text_dir)
-        #shutil.rmtree(self.filelistpath)
+        shutil.rmtree(self.text_dir)
+        shutil.rmtree(self.filelistpath)
         for (dirpath, dirnames, filenames) in os.walk(self.staging_dir):
             for filename in filenames:
                 src_path = os.path.join(dirpath, filename)
@@ -160,21 +160,23 @@ class BatchParser(object):
         param threads: number of concurrent threads, default 2
         """
         for i in range(self.threads):
-            self.open_process(i)
+            try:
+                self.open_process(i)
+            except KeyError:
+                print "FILELIST %i DOESN'T EXIST" % i
+                break
         while True:
             if len(self.processes) == 0:
                 break
             # sleep to avoid looping incessantly
             time.sleep(5)
             for i in self.processes.keys():
-                # TODO: change 'is not' to '!='
                 if self.processes[i].poll() is not None:
-                    print '==================== wid %s i %i IS NOT NONE ====================' % (self.wid, i)
+                    print 'WID %s: Process %i completed successfully.' % (self.wid, i)
                     del self.processes[i]
                     j = self.is_parse_incomplete(i)
-                    print '==================== wid %s j = %s ====================' % (self.wid, str(j))
                     if j:
-                        print '==================== wid %s OPENING RETRY PROCESS ====================' % self.wid
+                        print '*** WID %s: Opening retry process for %i as %i...' % (self.wid, i, j)
                         self.open_process(j)
 
         self.clean_up()
