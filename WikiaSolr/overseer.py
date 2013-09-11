@@ -89,8 +89,8 @@ class NLPOverseer(Overseer):
             options = {}
             iterator = self.getIterator()
             skip = [298117]
-            if os.path.exists('/data/xml'):
-                skip.extend(os.listdir('/data/xml'))
+            #if os.path.exists('/data/xml'):
+            #    skip.extend(os.listdir('/data/xml'))
             for group in iterator:
                 #if int(group['id']) % 2 == int(self.options['modulo']):
 
