@@ -105,7 +105,7 @@ class BatchParser(object):
         self.time.
         """
         command = self._get_batch_command(i)
-        print '%i: "%s"' % (i, command)
+        print 'Opening process ID %i: "%s"' % (i, command)
         self.time[i] = time.time()
         self.processes[i] = Popen([command], shell=True, preexec_fn=os.setsid)
 
