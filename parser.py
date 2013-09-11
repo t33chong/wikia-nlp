@@ -152,6 +152,7 @@ class BatchParser(object):
                 first_digit_dir = ensure_dir_exists(os.path.join(self.xml_dir, first_digit))
                 dest_path = os.path.join(first_digit_dir, filename)
                 shutil.move(src_path, dest_path)
+        shutil.rmtree(self.retry_dir)
         shutil.rmtree(self.staging_dir)
 
     def parse(self):
