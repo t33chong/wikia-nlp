@@ -198,8 +198,8 @@ class BatchParser(object):
                             print '*** WID %s: Moving process %i to failures.' % (self.wid, i)
                             self.move_to_failure(incomplete)
                             continue
-                        print '*** WID %s: Opening retry process for %i as %i...' % (self.wid, i, j)
                         j = self.write_retry_filelist(incomplete)
+                        print '*** WID %s: Opening retry process for %i as %i...' % (self.wid, i, j)
                         self.retries.append(j)
                         self.open_process(j)
                     print 'WID %s: Process %i completed successfully.' % (self.wid, i)
