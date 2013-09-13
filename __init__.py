@@ -1,1 +1,1 @@
-
+from nlp_rest_client import SolrWikiService, TopEntitiesService
