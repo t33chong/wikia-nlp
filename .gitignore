@@ -3,3 +3,4 @@ search-tests/*
 *.swp
 sumtract/*
 textwriter/*
+nlp_rest_client/*
