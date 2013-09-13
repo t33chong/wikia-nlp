@@ -2,3 +2,4 @@
 search-tests/*
 *.swp
 sumtract/*
+textwriter/aws_credentials.json
