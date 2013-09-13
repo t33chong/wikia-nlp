@@ -120,7 +120,6 @@ class EntityOverseer(Overseer):
     def check_if_parsed(self, wid):
         response = SolrWikiService().get(wid)[wid]
         articles_i = response['articles_i']
-        #url = response['url']
         wid_dir = os.path.join(self.xml_dir, str(wid))
         parsed_count = 0
         for (dirpath, dirnames, filenames) in os.walk(wid_dir):
@@ -138,7 +137,6 @@ class EntityOverseer(Overseer):
         if self.check_if_parsed(wid):
             print "Starting process for wid %i" % wid
             command = 'python %s %i' % (os.path.join(os.getcwd(), 'entity-harvester.py'), wid)
-            #command = 'python %s %i' % (os.path.join(os.getcwd(), 'foo.py'), wid)
             process = Popen(command, stdout=PIPE, shell=True)
             self.processes[wid] = process
             self.timings[wid] = datetime.now()
@@ -150,7 +148,7 @@ class EntityOverseer(Overseer):
                 iterator = self.getIterator()
                 for group in iterator:
                     while len(self.processes.keys()) == int(self.options['workers']):
-                        #time.sleep(1)
+                        time.sleep(5)
                         self.check_processes()
                     self.add_process(group)
         # make sure file is closed when manually stopping the overseer
