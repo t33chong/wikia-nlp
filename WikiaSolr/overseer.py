@@ -2,7 +2,8 @@ from WikiaSolr.queryiterator import QueryIterator
 from WikiaSolr.groupedqueryiterator import GroupedQueryIterator
 from wikicities.DB import LoadBalancer
 from corenlp.corenlp import *
-from subprocess import Popen
+from nlp_rest_client import SolrWikiService
+from subprocess import Popen, PIPE
 from datetime import datetime
 import json, requests, os, time
 """
@@ -103,36 +104,65 @@ class NLPOverseer(Overseer):
                     self.check_processes()
                 self.add_process(group)
 
-class ParserOverseer(object):
-    def __init__(self, subdirectories, threads=2):
-        self.iterator = subdirectories
-        self.threads = threads
-        self.processes = {}
-        self.timings = {}
+class EntityOverseer(Overseer):
+    def __init__(self, options={}):
+        super(EntityOverseer, self).__init__(options)
+        self.setOptions(options)
 
-    def add_process(self, group):
-        index = group['index']
-        print 'parsing %s*...' % index
-        command = '%s -filelist %s -outputDirectory %s' % (group['command'], group['filelist'], group['outputDirectory'])
-        print command # DEBUG
-        if not os.path.exists(group['outputDirectory']):
-            os.makedirs(group['outputDirectory'])
-        process = Popen(command, shell=True)
-        self.processes[index] = process
-        self.timings[index] = datetime.now()
+    def setOptions(self, options={}):
+        self.options = options
+        self.csv = open(options.get('csv_file', '/data/wikis_to_entities.csv'), 'w')
+        self.xml_dir = options.get('xml_dir', '/data/xml')
+
+    def getIterator(self):
+        return [int(wid) for wid in os.listdir(self.xml_dir)]
+
+    def check_if_parsed(self, wid):
+        response = SolrWikiService().get(wid)[wid]
+        articles_i = response['articles_i']
+        #url = response['url']
+        wid_dir = os.path.join(self.xml_dir, str(wid))
+        parsed_count = 0
+        for (dirpath, dirnames, filenames) in os.walk(wid_dir):
+            for filename in filenames:
+                parsed_count += 1
+        percent_complete = float(parsed_count)/articles_i
+        sys.stdout.write('wid %i is %i%s complete, ' % (wid, percent_complete*100, '%'))
+        if percent_complete >= 0.9:
+            print 'harvesting named entities...'
+            return True
+        print 'skipping...'
+        return False
+
+    def add_process(self, wid):
+        if self.check_if_parsed(wid):
+            print "Starting process for wid %i" % wid
+            command = 'python %s %i' % (os.path.join(os.getcwd(), 'entity-harvester.py'), wid)
+            #command = 'python %s %i' % (os.path.join(os.getcwd(), 'foo.py'), wid)
+            process = Popen(command, stdout=PIPE, shell=True)
+            self.processes[wid] = process
+            self.timings[wid] = datetime.now()
 
     def oversee(self):
-        iterator = self.iterator
-        for group in iterator:
-            while len(self.processes.keys()) == int(self.threads):
-                time.sleep(5)
-                self.check_processes()
-            self.add_process(group)
+        try:
+            while True:
+                options = {}
+                iterator = self.getIterator()
+                for group in iterator:
+                    while len(self.processes.keys()) == int(self.options['workers']):
+                        #time.sleep(1)
+                        self.check_processes()
+                    self.add_process(group)
+        # make sure file is closed when manually stopping the overseer
+        except KeyboardInterrupt:
+            self.csv.close()
 
     def check_processes(self):
          for pkey in self.processes.keys():
              if self.processes[pkey].poll() is not None:
-                 print "Finished index %s in %d seconds with return status %s" % (pkey, (datetime.now() - self.timings[pkey]).seconds, self.processes[pkey].returncode)
+                 if self.options.get('verbose', False):
+                     print "Finished wid %s in %d seconds with return status %s" % (pkey, (datetime.now() - self.timings[pkey]).seconds, self.processes[pkey].returncode)
+                 self.csv.write(self.processes[pkey].stdout.read())
                  del self.processes[pkey], self.timings[pkey]
 
 """
