@@ -105,13 +105,17 @@ class NLPOverseer(Overseer):
                 self.add_process(group)
 
 class EntityOverseer(Overseer):
-    def __init__(self, options={}):
+    def __init__(self, options={}, skip=None):
         super(EntityOverseer, self).__init__(options)
         self.setOptions(options)
+        self.skip = {}
+        if options['skip']:
+            self.skip = dict((int(wid), True) for wid in open(options['skip']))
 
     def setOptions(self, options={}):
         self.options = options
-        self.csv = open(options.get('csv_file', '/data/wikis_to_entities.csv'), 'w')
+        csv = options.get('csv_file', '/data/wikis_to_entities.csv')
+        self.csv = open(csv, 'w') if not os.path.exists(csv) else open(csv, 'a')
         self.xml_dir = options.get('xml_dir', '/data/xml')
 
     def getIterator(self):
@@ -146,11 +150,14 @@ class EntityOverseer(Overseer):
             while True:
                 options = {}
                 iterator = self.getIterator()
-                for group in iterator:
+                for wid in iterator:
+                    if self.skip.get(wid, False):
+                        print 'wid %i already complete, skipping...' % wid
+                        continue
                     while len(self.processes.keys()) == int(self.options['workers']):
                         time.sleep(5)
                         self.check_processes()
-                    self.add_process(group)
+                    self.add_process(wid)
         # make sure file is closed when manually stopping the overseer
         except KeyboardInterrupt:
             self.csv.close()
