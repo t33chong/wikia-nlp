@@ -15,7 +15,7 @@ config = json.loads(open('nlp-config.json').read())[socket.gethostname()]
 
 # CORENLP CONSTANTS
 MEMORY = config['memory']
-PROPERTIES = '/home/tristan/stanford-corenlp-python/corenlp/performance.properties'
+PROPERTIES = os.path.join(os.getcwd(), 'corenlp.properties')
 
 wid = int(sys.argv[1])
 language = 'en' if len(sys.argv) < 3 else sys.argv[2]
