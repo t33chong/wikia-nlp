@@ -7,7 +7,7 @@ Last indexed condition is optionally provided as sys.argv[3]
 """
 import os, sys, socket, shutil, json, gzip, tempfile, requests, time
 from parser import BatchParser, ensure_dir_exists
-from WikiaSolr import QueryIterator, get_config, ParserOverseer
+from WikiaSolr import QueryIterator, get_config
 from normalize import clean_list
 
 DATA_DIR = '/data' # /data
