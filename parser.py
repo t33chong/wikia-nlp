@@ -7,7 +7,7 @@ from subprocess import Popen
 from collections import defaultdict
 from corenlp.corenlp import init_corenlp_command
 
-CORENLP_PATH = os.path.join(os.getcwd(), 'corenlp.properties')
+CORENLP_PATH = '/home/tristan/stanford-corenlp-python/stanford-corenlp-full-2013-06-20'
 
 def ensure_dir_exists(directory):
     """
